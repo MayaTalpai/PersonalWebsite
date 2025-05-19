@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ML Pixel Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>body { margin: 0; overflow: hidden; }</style>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+  <script src="CanvasInput.min.js"></script>
+</head>
+<div id="npc-form" style="
+  position: absolute;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.95);
+  padding: 10px;
+  border-radius: 8px;
+  border: 2px solid #333;
+  display: none;
+  z-index: 9999;
+  font-family: sans-serif;
+">
+  <input id="npc-input" type="text" placeholder="Type a movie…" maxlength="50"
+         style="padding:8px; font-size:16px; width:300px; border-radius:4px; border:1px solid #aaa;"/>
+  <button id="npc-submit" style="
+    padding:8px 12px; font-size:16px; font-weight:bold;
+    background:#444; color:white; border-radius:4px; cursor:pointer;">
+    OK
+  </button>
+</div>
+<body>
+  <script src="game.js"></script>
+</body>
+</html>
+
