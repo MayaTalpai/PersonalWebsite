@@ -9,7 +9,7 @@ const config = {
     scene: { preload, create, update }
 };
 
-// GLOBAL variables — DO NOT redeclare these anywhere else!
+// GLOBAL variables — 
 let player, cursors;
 let dialogueBox, dialogueText;
 let signBox, signText, signMask, maxSignScroll;
@@ -150,7 +150,7 @@ function create() {
     let promptText = "";
     switch (npcName) {
         case "Orc":
-            promptText = "Orc grunts: 'Oi, Maya! You come to the Snowy Mountain Tavern with no GOLD? And its movie night! ARG, well at least give us some insight into what youre into... What's a movie you like, small one?'";
+            promptText = "Orc grunts: 'Oi, Maya! You come to the Snowy Mountain Tavern with NO GOLD and seeking shelter? *Sigh* You can stay. It's movie night...Give us some insight into a movie you like, small one?'";
             break;
         case "Wizard":
             promptText = "Wizard chants: 'Greetings, Maya. As a divination wizard I forsee a good movie in your future...as soon as I can pick out from one of these film rolls. Do you have a favorite movie?'";
@@ -314,10 +314,10 @@ function create() {
         });
     };
     [
-      { name:'DnDSign',    text:'Dungeons & Dragons \nMaya has been playing the same D&D campaign for the past year with her friends! She loves the character shes playing: Taepo Frog the chaotic neutral half-orc Druid on a mission to become one with nature via mainitnaing the balance with decay and rot. She plays with her two friends who are playing as a human monk on a path to find his long lost kin and a half elf ranger set on taming a god who is the cause of a wild storm ravaging her home. Maya has the best Dungeon Master (DM), Chris, who beautifully crafts the adventures we go on! He extremly talented at telling stories and Maya loves reading and listenting to them. The best part is the collaborative story telling with her friends. ' },
-      { name:'ChessSign',  text:'Chess \nMaya has been playing chess since 3rd grade. She played competative chess at one point too! It really doenst get much more nerdy than that! She still enjoys the challange of playing "bullet chess". Bullet chess involves trying to win within 1 minute long games. YES, 1 minute! It is a great way to keep her mind sharp, being flexible, and thinking quick on her feet. She finds chess a great allegory to life. Sometimes you have to sacrafice for a future move 3 steps ahead. Also, much like in life, you have to navigate a game with nuiance -- determining when to be defensive and when to offeneive to secure the win!' },
-      { name:'SolaceNatureSign', text:'Nature \n Maya loves to be present in moments of solace. She often looks for moments to sit in nature and take it all in. A good time to her is feeling the grass between her toes, smelling the wind flutter through the trees, and listening to the frogs splishing through the pond. Add in some good company, a light snack, and some reading material and thats a party! She wants to one day visit Svalbard which is one of the most northern place you can visit in the world known for being incredibly remote and frigid cold. Pop a squat on the log for a little moment of peace and quiet' },
-      { name:'CinemaSign', text:'Cinema \n Maya loves going to the movies. So much so that she will go broad daylight or catch the late-night showing. She does not faulter in her decision to go even if it is with her friends or even by herself! She loves the theater experince. She will find any excuse to see a film on the big screen and feel the rumble of the cinema seats in a thrilling-action movie. She is particulalry fond of horror movies, but her favorite thing to do is go to secret showings. For $5 you can buy tickets to a show, and you wont now what youre sitting down to watch untill the opening credit roll! Feel free to talk to the adventuring party for some movie reccomendations based on 3 movies you like! ' }
+      { name:'DnDSign',    text:'Dungeons & Dragons \nMaya has been playing the same D&D campaign for the past year with her friends! She loves the character shes playing: Taepo Frog the chaotic neutral half-orc Druid on a mission to become one with nature by studying the balance of life with decay and rot. She plays with her two friends. One of them is playing as a human monk on a path to find his long lost kin and the other is a half elf ranger set on taming a god who is the cause of a wild storm ravaging her home. Maya has the best Dungeon Master (DM), Chris, who beautifully crafts the adventures we go on! He extremly talented at telling stories. Maya loves reading and listenting to them. The best part is the collaborative story telling with her friends. ' },
+      { name:'ChessSign',  text:'Chess \nMaya has been playing chess since 3rd grade. She played competative chess at one point too! It really doenst get much more nerdy than that... She still enjoys the challange of playing "bullet chess". Bullet chess involves trying to win within 1 minute long games. YES, 1 minute! It is a great way to keep her mind sharp, being flexible, and thinking quick on her feet. She finds chess a great allegory to life. Sometimes you have to sacrafice for a future move 3 steps ahead. Also, much like in life, you have to navigate a game with nuiance -- determining when to be defensive and when to offeneive to secure the win!' },
+      { name:'SolaceNatureSign', text:'Nature \n Maya loves to be present in the moment and surrounded by nature. She often looks for moments to sit in nature and take it all in. A good time to her is feeling the grass on her skin, smelling the wind flutter through the trees, and listening to the frogs splishing through the pond. She wants to one day visit Svalbard; the most northern place you can visit in the world. It is incredibly remote and frigid cold. Pop a squat on the log for a little moment of peace and quiet' },
+      { name:'CinemaSign', text:'Cinema \n Maya loves going to the movies. Oddly enough, she likes to go to the movies alone sometimes and really enjoys the theater experince. She will find any excuse to see a film on the big screen and feel the rumble of the cinema seats in a thrilling-action movie. She is particulalry fond of horror movies, but her favorite thing to do is go to secret showings. For $5 you can buy tickets to a show, and you wont now what youre sitting down to watch untill the opening credit roll! Feel free to talk to the adventuring party for some movie reccomendations based on 3 movies you like! ' }
     ].forEach(({ name, text }) => {
       const layer = map.createLayer(name, allTilesets, 0, 0);
       layer.setTileIndexCallback(273, () => showSign(text), this);
@@ -354,7 +354,7 @@ function update() {
     if (cursors.up.isDown    && !b.blocked.up)        vy = -100;
     else if (cursors.down.isDown && !b.blocked.down)  vy = 100;
 
-    // Only hide dialogue on movement if not rec list
+    // Hide dialogue on movement if not movie rec list
     if (!recListActive && dialogueBox.visible && (vx !== 0 || vy !== 0)) {
         dialogueBox.setVisible(false);
         dialogueText.setVisible(false);
