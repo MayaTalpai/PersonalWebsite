@@ -9,7 +9,7 @@ const config = {
     scene: { preload, create, update }
 };
 
-// GLOBAL variables — 
+// GLOBAL variables —
 let player, cursors;
 let dialogueBox, dialogueText;
 let signBox, signText, signMask, maxSignScroll;
@@ -22,7 +22,11 @@ let justAsked = { orc: false, wizard: false, druid: false };
 let orcLayer, wizardLayer, druidLayer;
 
 let recListActive = true;        // GLOBAL!
-let recListHideAt = 0;            // GLOBAL!
+let recListHideAt = 0;           // GLOBAL!
+
+// NEW: debounce for signs (prevents flashing)
+let signActive = false;
+let currentSignLayer = null;
 
 function showDOMInputPrompt(promptText, callback) {
     let prev = document.getElementById('phaserInputPrompt');
@@ -147,24 +151,24 @@ function create() {
     recListHideAt = 0;  // <-- Only assign, DO NOT redeclare with let/var!
 
     const askNPC = (npcName, cb) => {
-    let promptText = "";
-    switch (npcName) {
-        case "Orc":
-            promptText = "Orc grunts: 'Oi, Maya! You come to the Snowy Mountain Tavern with NO GOLD and seeking shelter? *Sigh* You can stay. It's movie night...Give us some insight into a movie you like, small one?'";
-            break;
-        case "Wizard":
-            promptText = "Wizard chants: 'Greetings, Maya. As a divination wizard I forsee a good movie in your future...as soon as I can pick out from one of these film rolls. Do you have a favorite movie?'";
-            break;
-        case "Druid":
-            promptText = "Druid whispers: 'MAYA! I need an escape form the sheep...theyre driving me insane. Im in need of a well awaited movie night. Do tell, do you have a movie reccomendation?'";
-            break;
-        default:
-            promptText = `${npcName}: What's a movie you like?`;
-    }
-    showDOMInputPrompt(promptText, answer => {
-        if (answer) cb(answer);
-    });
-};
+        let promptText = "";
+        switch (npcName) {
+            case "Orc":
+                promptText = "Orc grunts: 'Oi, Maya! You come to the Snowy Mountain Tavern with NO GOLD and seeking shelter? *Sigh* You can stay. It's movie night...Give us some insight into a movie you like, small one?'";
+                break;
+            case "Wizard":
+                promptText = "Wizard chants: 'Greetings, Maya. As a divination wizard I forsee a good movie in your future...as soon as I can pick out from one of these film rolls. Do you have a favorite movie?'";
+                break;
+            case "Druid":
+                promptText = "Druid whispers: 'MAYA! I need an escape form the sheep...theyre driving me insane. Im in need of a well awaited movie night. Do tell, do you have a movie reccomendation?'";
+                break;
+            default:
+                promptText = `${npcName}: What's a movie you like?`;
+        }
+        showDOMInputPrompt(promptText, answer => {
+            if (answer) cb(answer);
+        });
+    };
 
     const checkAllSelected = () => {
         const titles = Object.values(npcSelections).filter(v => v);
@@ -284,6 +288,44 @@ function create() {
     signText.setMask(signMask);
     maxSignScroll = 0;
 
+    // Helper: show sign once per entry; no auto-hide timer
+    const showSign = (msg, layerRef) => {
+        if (domInputActive || recListActive) return;
+        // If already on the same sign, do nothing (prevents flashing)
+        if (signActive && currentSignLayer === layerRef) return;
+
+        signActive = true;
+        currentSignLayer = layerRef;
+
+        signText.setText(msg).setVisible(true);
+        maxSignScroll = Math.max(0, signText.height - boxH + 40);
+        signText.y = 600 - boxH/2 + 20;
+        signBox.setVisible(true);
+    };
+
+    // Build the sign layers and trigger
+    [
+      { name:'DnDSign',    text:'Dungeons & Dragons \nMaya has been playing the same D&D campaign for the past year with her friends! She loves the character shes playing: Taepo Frog the chaotic neutral half-orc Druid on a mission to become one with nature by studying the balance of life with decay and rot. She plays with her two friends. One of them is playing as a human monk on a path to find his long lost kin and the other is a half elf ranger set on taming a god who is the cause of a wild storm ravaging her home. Maya has the best Dungeon Master (DM), Chris, who beautifully crafts the adventures they go on! He is a professional writer himself and is very talented at telling stories, which is great because Maya loves reading and listenting to all stories! The best part is the collaborative story telling with her friends. ' },
+      { name:'ChessSign',  text:'Chess \nMaya has been playing chess since 3rd grade. She even played competitive chess at one point too! It really doenst get much more nerdy than that... She currently enjoys the challange of playing "bullet chess". Bullet chess involves trying to win the game within 1 minute. YES, 1 minute! It is a great way to keep her mind sharp, learning to be flexible, and to think quick on her feet. She finds chess a great allegory to life. Sometimes you have to sacrafice now for a future move 3 steps ahead and navigate a game with nuance.' },
+      { name:'SolaceNatureSign', text:'Nature \n Maya likes to find moments to be "present" and thats usually surrounded by nature. She often looks for moments to sit in nature and take it all in. Theres nothing like touching some grass, smelling the rain on the wind, and listening to the frogs splishing through the pond. She wants to one day visit Svalbard; the most northern place you can visit in the world. It is incredibly remote and frigid cold. Pop a squat on the log for a little moment of peace and quiet' },
+      { name:'CinemaSign', text:'Cinema \n Maya loves going to the movies. She will find any excuse to see a film on the big screen. She is particulalry fond of horror movies, but her favorite thing to do is go to secret showings. For $5 you can buy tickets to a show, and you wont now what youre sitting down to watch untill the opening credits roll! Feel free to talk to the adventuring party around for some movie reccomendations based on 3 movies you like!' }
+    ].forEach(({ name, text }) => {
+      const layer = map.createLayer(name, allTilesets, 0, 0);
+      layer.setTileIndexCallback(273, () => showSign(text, layer), this);
+      this.physics.add.overlap(player, layer);
+    });
+
+    // Scroll sign text with mouse wheel
+    this.input.on('wheel', (_ptr, _objs, _dx, dy) => {
+        if (signText.visible && maxSignScroll > 0) {
+            signText.y = Phaser.Math.Clamp(
+                signText.y - dy,
+                (600 - boxH/2 + 20) - maxSignScroll,
+                600 - boxH/2 + 20
+            );
+        }
+    });
+
     player = this.physics.add.sprite(130, 280, 'player');
     this.physics.add.collider(player, wallsLayer);
 
@@ -302,37 +344,6 @@ function create() {
     this.physics.add.overlap(player, orcLayer);
     this.physics.add.overlap(player, wizardLayer);
     this.physics.add.overlap(player, druidLayer);
-
-    const showSign = msg => {
-        signText.setText(msg).setVisible(true);
-        maxSignScroll = Math.max(0, signText.height - boxH + 40);
-        signText.y = 600 - boxH/2 + 20;
-        signBox.setVisible(true);
-        this.time.delayedCall(1000, () => {
-            signBox.setVisible(false);
-            signText.setVisible(false);
-        });
-    };
-    [
-      { name:'DnDSign',    text:'Dungeons & Dragons \nMaya has been playing the same D&D campaign for the past year with her friends! She loves the character shes playing: Taepo Frog the chaotic neutral half-orc Druid on a mission to become one with nature by studying the balance of life with decay and rot. She plays with her two friends. One of them is playing as a human monk on a path to find his long lost kin and the other is a half elf ranger set on taming a god who is the cause of a wild storm ravaging her home. Maya has the best Dungeon Master (DM), Chris, who beautifully crafts the adventures they go on! He is a professional writer himself and is very talented at telling stories, which is great because Maya loves reading and listenting to all stories! The best part is the collaborative story telling with her friends. ' },
-      { name:'ChessSign',  text:'Chess \nMaya has been playing chess since 3rd grade. She even played competitive chess at one point too! It really doenst get much more nerdy than that... She currently enjoys the challange of playing "bullet chess". Bullet chess involves trying to win the game within 1 minute. YES, 1 minute! It is a great way to keep her mind sharp, learning to be flexible, and to think quick on her feet. She finds chess a great allegory to life. Sometimes you have to sacrafice now for a future move 3 steps ahead and navigate a game with nuance.' },
-      { name:'SolaceNatureSign', text:'Nature \n Maya likes to find moments to be "present" and thats usually surrounded by nature. She often looks for moments to sit in nature and take it all in. Theres nothing like touching some grass, smelling the rain on the wind, and listening to the frogs splishing through the pond. She wants to one day visit Svalbard; the most northern place you can visit in the world. It is incredibly remote and frigid cold. Pop a squat on the log for a little moment of peace and quiet' },
-      { name:'CinemaSign', text:'Cinema \n Maya loves going to the movies. She will find any excuse to see a film on the big screen. She is particulalry fond of horror movies, but her favorite thing to do is go to secret showings. For $5 you can buy tickets to a show, and you wont now what youre sitting down to watch untill the opening credits roll! Feel free to talk to the adventuring party around for some movie reccomendations based on 3 movies you like!' }
-    ].forEach(({ name, text }) => {
-      const layer = map.createLayer(name, allTilesets, 0, 0);
-      layer.setTileIndexCallback(273, () => showSign(text), this);
-      this.physics.add.overlap(player, layer);
-    });
-
-    this.input.on('wheel', (_ptr, _objs, _dx, dy) => {
-        if (signText.visible && maxSignScroll > 0) {
-            signText.y = Phaser.Math.Clamp(
-                signText.y - dy,
-                (600 - boxH/2 + 20) - maxSignScroll,
-                600 - boxH/2 + 20
-            );
-        }
-    });
 }
 
 function showQuickDialogue(msg) {
@@ -376,7 +387,17 @@ function update() {
     if (wizardLayer && notOnTile(wizardLayer, 338)) justAsked.wizard = false;
     if (druidLayer && notOnTile(druidLayer, 349)) justAsked.druid = false;
 
-    // Rec List Manual Timer: Hide after 15s (browser-accurate)
+    // Hide the sign when you step off the sign tile (prevents flashing)
+    if (signActive && currentSignLayer) {
+        if (notOnTile(currentSignLayer, 273)) {
+            signActive = false;
+            currentSignLayer = null;
+            signBox.setVisible(false);
+            signText.setVisible(false);
+        }
+    }
+
+    // Rec List Manual Timer: Hide after 60s (browser-accurate)
     if (recListActive) {
         const timeLeft = (recListHideAt - Date.now()) / 1000;
         console.log(`RecListActive: time left = ${timeLeft.toFixed(2)}s`);
@@ -415,9 +436,9 @@ function fetchCombinedSimilar(titles, scene) {
         const allTitles = [].concat(...allRecs);
         const deduped = [...new Set(allTitles.filter(x => !titles.includes(x)))];
         let msg = 'Recommended for your party:\n' + deduped.slice(0, 16).join(' · ') +
-                  '\n\n(Ask the adventuring party for new reccomnendations in 60 seconds...)';
+                  '\n\n(Ask the adventuring party for new recommendations in 60 seconds...)';
         recListActive = true;
-        recListHideAt = Date.now() + 60000; // 15 seconds from now!
+        recListHideAt = Date.now() + 60000; // 60 seconds from now
         dialogueBox.setVisible(true);
         dialogueText.setText(msg).setVisible(true).setDepth(101);
         dialogueActive = true;
@@ -430,7 +451,7 @@ function fetchCombinedSimilar(titles, scene) {
     })
     .catch(err => {
         recListActive = true;
-        recListHideAt = Date.now() + 60000;
+        recListHideAt = Date.now() + 60000; // 60 seconds from now
         dialogueBox.setVisible(true);
         dialogueText.setText('Error fetching TMDB recommendations!\n(Retry in 60 seconds)').setVisible(true).setDepth(101);
         dialogueActive = true;
@@ -439,3 +460,4 @@ function fetchCombinedSimilar(titles, scene) {
         justAsked.druid = true;
     });
 }
+
